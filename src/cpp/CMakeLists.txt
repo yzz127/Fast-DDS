@@ -126,6 +126,10 @@ set(${PROJECT_NAME}_source_files
     rtps/transport/test_UDPv4Transport.cpp
     rtps/transport/tcp/TCPControlMessage.cpp
     rtps/transport/tcp/RTCPMessageManager.cpp
+    rtps/transport/ChainingTransport.cpp
+    rtps/transport/low-bandwidth/header-reduction/HeaderReductionTransport.cpp
+    rtps/transport/low-bandwidth/header-reduction/HeaderReductionImpl.cpp
+    rtps/transport/low-bandwidth/source-timestamp/SourceTimestampTransport.cpp
 
     dynamic-types/AnnotationDescriptor.cpp
     dynamic-types/AnnotationParameterValue.cpp
@@ -266,6 +270,32 @@ endif()
 # Add sources to Makefile.am
 set_sources(${${PROJECT_NAME}_source_files})
 
+# Configure ZLIB
+find_package(ZLIB)
+if(ZLIB_FOUND)
+    set(HAVE_ZLIB 1)
+else()
+    set(HAVE_ZLIB 0)
+endif()
+
+# Configure BZIP2
+find_package(BZip2)
+if(BZIP2_FOUND)
+    set(HAVE_BZIP2 1)
+else()
+    set(HAVE_BZIP2 0)
+endif()
+
+set(${PROJECT_NAME}_compression_source_files
+    rtps/transport/low-bandwidth/payload-compression/PayloadCompressionTransport.cpp
+    rtps/transport/low-bandwidth/payload-compression/PayloadCompressionImpl.cpp
+)
+
+if(HAVE_ZLIB OR HAVE_BZIP2)
+    list(APPEND ${PROJECT_NAME}_source_files
+        ${${PROJECT_NAME}_compression_source_files}
+        )
+endif()
 
 # Security sources
 set(${PROJECT_NAME}_security_source_files
@@ -445,6 +475,8 @@ elseif(NOT EPROSIMA_INSTALLER)
         $<$<BOOL:${WIN32}>:iphlpapi$<SEMICOLON>Shlwapi>
         ${THIRDPARTY_BOOST_LINK_LIBS}
         $<$<BOOL:${LINK_LIBATOMIC}>:atomic>
+        $<$<BOOL:${ZLIB_FOUND}>:ZLIB::ZLIB>
+        $<$<BOOL:${BZIP2_FOUND}>:BZip2::BZip2>
         )
 
     if(MSVC OR MSVC_IDE)
