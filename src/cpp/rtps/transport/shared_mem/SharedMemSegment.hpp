@@ -39,6 +39,7 @@
 
 #include "RobustInterprocessCondition.hpp"
 #include "SharedMemUUID.hpp"
+#include <fastdds/dds/log/Log.hpp>
 
 namespace eprosima {
 namespace fastdds {
