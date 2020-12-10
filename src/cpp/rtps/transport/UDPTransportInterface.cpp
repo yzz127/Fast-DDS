@@ -283,9 +283,7 @@ bool UDPTransportInterface::OpenOutputChannel(
     // already reuses a SenderResource.
     for (auto& sender_resource : sender_resource_list)
     {
-        UDPSenderResource* udp_sender_resource = UDPSenderResource::cast(*this, sender_resource.get());
-
-        if (udp_sender_resource)
+        if (sender_resource->kind() == this->kind())
         {
             return true;
         }
@@ -476,12 +474,12 @@ bool UDPTransportInterface::send(
     {
         if (IsLocatorSupported(*it))
         {
-            ret &= send(send_buffer, 
-                send_buffer_size, 
-                socket,
-                *it, 
-                only_multicast_purpose, 
-                time_out);
+            ret &= send(send_buffer,
+                            send_buffer_size,
+                            socket,
+                            *it,
+                            only_multicast_purpose,
+                            time_out);
         }
 
         ++it;
@@ -521,7 +519,7 @@ bool UDPTransportInterface::send(
             timeStruct.tv_usec = timeout.count() > 0 ? timeout.count() : 0;
             setsockopt(getSocketPtr(socket)->native_handle(), SOL_SOCKET, SO_SNDTIMEO,
                     reinterpret_cast<const char*>(&timeStruct), sizeof(timeStruct));
-#endif
+#endif // ifndef _WIN32
 
             asio::error_code ec;
             bytesSent = getSocketPtr(socket)->send_to(asio::buffer(send_buffer,
